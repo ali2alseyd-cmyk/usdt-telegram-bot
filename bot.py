@@ -689,7 +689,7 @@ def handle_referral(call):
         
         lang = get_user_language(user_id)
         
-        referral_text = f"""🎯 <b>نظام الإحالات</b>
+        referral_text = f""" <b>نظام الإحالات</b>
 
 🔗 <b>رابط الدعوة الخاص بك:</b>
 <code>{referral_link}</code>
@@ -700,7 +700,7 @@ def handle_referral(call):
 • فرصة ربح مضاعفة
 • وصول أسرع لشروط السحب (25 إحالة مطلوبة)
 
-<b>📤 شارك الرابط مع أصدقائك واكسب المزيد!</b>""" if lang == 'ar' else f"""🎯 <b>Referral System</b>
+<b>📤 شارك الرابط مع أصدقائك واكسب المزيد!</b>""" if lang == 'ar' else f""" <b>Referral System</b>
 
 🔗 <b>Your referral link:</b>
 <code>{referral_link}</code>
