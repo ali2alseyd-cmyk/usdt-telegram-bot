@@ -660,7 +660,35 @@ def handle_withdraw(call):
     try:
         user = get_user(call.from_user.id)
         days_registered, days_remaining = get_membership_days(call.from_user.id)
-        lang = get_user_language(call.from_user.id)
+    @bot.callback_query_handler(func=lambda call: call.data == "referral")
+def handle_referral(call):
+    try:
+        user_id = call.from_user.id
+        referral_link = f"https://t.me/Usdt_Mini1Bot?start=ref{user_id}"
+        
+        lang = get_user_language(user_id)
+        
+        # النص بدون إيموجيات - يشتغل 100%
+        referral_text = f"""<b>نظام الإحالات</b>
+
+<b>رابط الدعوة الخاص بك:</b>
+<code>{referral_link}</code>
+
+<b>مزايا الإحالات:</b>
+• 0.50 USDT مكافأة فورية لكل إحالة
+• +1 محاولة ألعاب يومية لكل إحالة  
+• فرصة ربح مضاعفة
+• وصول أسرع لشروط السحب (25 إحالة مطلوبة)
+
+<b>شارك الرابط مع أصدقائك واكسب المزيد!</b>"""
+        
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton("مشاركة الرابط", url=f"https://t.me/share/url?url={referral_link}"))
+        keyboard.add(InlineKeyboardButton("رجوع", callback_data="back_to_profile"))
+        
+        bot.edit_message_text(referral_text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
+    except Exception as e:
+        print(f"Referral error: {e}")    lang = get_user_language(call.from_user.id)
         
         if not user.get('has_deposit', 0):
             withdraw_text = f"""❌ <b>غير مؤهل للسحب</b>
@@ -679,69 +707,7 @@ def handle_withdraw(call):
 
 <b>💰 Required conditions:</b>
 1. ✅ Initi# 👥 نظام الإحالات - الكود المصحح
-@bot.callback_query_handler(func=lambda call: call.data == "referral")
-def handle_referral(call):
-    try:
-        print(f"🔔 زر الإحالات مضغوط من user_id: {call.from_user.id}")
-        
-        user_id = call.from_user.id
-        referral_link = f"https://t.me/Usdt_Mini1Bot?start=ref{user_id}"
-        
-        lang = get_user_language(user_id)
-        
-        referral_text = f""" <b>نظام الإحالات</b>
 
-🔗 <b>رابط الدعوة الخاص بك:</b>
-<code>{referral_link}</code>
-
-👥 <b>مزايا الإحالات:</b>
-• 🎁 0.50 USDT مكافأة فورية لكل إحالة
-• +1 محاولة ألعاب يومية لكل إحالة  
-• فرصة ربح مضاعفة
-• وصول أسرع لشروط السحب (25 إحالة مطلوبة)
-
-<b>📤 شارك الرابط مع أصدقائك واكسب المزيد!</b>""" if lang == 'ar' else f""" <b>Referral System</b>
-
-🔗 <b>Your referral link:</b>
-<code>{referral_link}</code>
-
-👥 <b>Referral benefits:</b>
-• 🎁 0.50 USDT instant bonus per referral
-• +1 daily game attempt per referral  
-• Double profit opportunity
-• Faster access to withdrawal conditions (25 referrals required)
-
-<b>📤 Share the link with your friends and earn more!</b>"""
-        
-        keyboard = InlineKeyboardMarkup()
-        
-        # زر المشاركة - إصلاح الرابط
-        share_url = f"https://t.me/share/url?url={referral_link}"
-        if lang == 'ar':
-            keyboard.add(InlineKeyboardButton("📤 مشاركة الرابط", url=share_url))
-            keyboard.add(InlineKeyboardButton("🔙 رجوع", callback_data="back_to_profile"))
-        else:
-            keyboard.add(InlineKeyboardButton("📤 Share Link", url=share_url))
-            keyboard.add(InlineKeyboardButton("🔙 Back", callback_data="back_to_profile"))
-        
-        # إرسال الرسالة المعدلة
-        bot.edit_message_text(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            text=referral_text,
-            reply_markup=keyboard,
-            parse_mode="HTML"
-        )
-        
-        # تأكيد النقر
-        bot.answer_callback_query(call.id, "✅ تم فتح نظام الإحالات")
-        
-    except Exception as e:
-        print(f"❌ خطأ في زر الإحالات: {e}")
-        bot.answer_callback_query(call.id, "❌ حدث خطأ، حاول مرة أخرى")al deposit (10 USDT)
-2. ✅ 150 USDT balance  
-3. ✅ 25 new referrals
-4. ✅ 10 days membership
 
 <b>💳 To start deposit, click deposit in main menu</b>"""
             
