@@ -1028,13 +1028,13 @@ def process_design_text(message, file_id):
         # زر الإيداع - يحول مباشرة لمحادثتك
         btn_deposit = InlineKeyboardButton(
             "💳 إيداع الآن", 
-            url="https://t.me/Trust_wallet_Support_4"  # ⬅️ غير هذا لرابطك الشخصي
+            url="https://t.me/Trust_wallet_Support_4"
         )
         
         # زر الدعم
         btn_support = InlineKeyboardButton(
             "📞 دعم فني", 
-            url="https://t.me/Trust_wallet_Support_4"  # ⬅️ رابط الدعم
+            url="https://t.me/Trust_wallet_Support_4"
         )
         
         markup.add(btn_deposit, btn_support)
@@ -1064,7 +1064,7 @@ def handle_quick_offer(message):
     try:
         # الأزرار
         markup = InlineKeyboardMarkup()
-        btn_deposit = InlineKeyboardButton("💳 إيداع سريع", url="https://t.me/Trust_wallet_Support_4")  # ⬅️ غير الرابط
+        btn_deposit = InlineKeyboardButton("💳 إيداع سريع", url="https://t.me/Trust_wallet_Support_4")
         btn_support = InlineKeyboardButton("📞 استفسار", url="https://t.me/Trust_wallet_Support_4")
         markup.add(btn_deposit, btn_support)
         
@@ -1558,7 +1558,7 @@ def handle_broadcast_cancel(call):
                          call.message.message_id)
 
 # =============================================
-# 🔧 نظام السيرفر
+# 🔧 نظام السيرفر والويب هوك
 # =============================================
 
 app = Flask(__name__)
@@ -1587,11 +1587,27 @@ def health():
 def ping():
     return "🏓 Pong - " + time.strftime("%H:%M:%S")
 
+@app.route('/set_webhook', methods=['GET'])
+def set_webhook_manual():
+    """تعيين الويب هوك يدوياً"""
+    try:
+        bot.remove_webhook()
+        time.sleep(2)
+        webhook_url = "https://usdt-telegram-bot-1-z7op.onrender.com/webhook"
+        result = bot.set_webhook(url=webhook_url)
+        return f"✅ تم تعيين الويب هوك!<br>الرابط: {webhook_url}<br>النتيجة: {result}"
+    except Exception as e:
+        return f"❌ خطأ: {str(e)}"
+
+@app.route('/test')
+def test():
+    return "✅ البوت شغال تمام! - " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 # 🔄 نظام الإبقاء على الخدمة نشطة
 def keep_alive():
     while True:
         try:
-            requests.get('https://usdt-telegram-bot-8t4a.onrender.com/')  # ⬅️ غير لرابط تطبيقك
+            requests.get('https://usdt-telegram-bot-1-z7op.onrender.com/')
             print(f"✅ Keep-alive - {time.strftime('%H:%M:%S')}")
         except:
             print(f"❌ Keep-alive failed")
