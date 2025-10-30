@@ -132,8 +132,8 @@ def handle_referral_system(message):
                     referrer = get_user(referrer_id)
                     if referrer:
                         update_user(referrer_id,
-                            balance=referrer['balance'] + 1.0,
-                            total_earnings=referrer['total_earnings'] + 1.0,
+                            balance=referrer['balance'] + 0.50,  # ⬅️ تم التعديل من 1.0 إلى 0.50
+                            total_earnings=referrer['total_earnings'] + 0.50,  # ⬅️ تم التعديل من 1.0 إلى 0.50
                             referral_count=referrer['referral_count'] + 1,
                             new_referrals=referrer['new_referrals'] + 1
                         )
@@ -336,7 +336,7 @@ def handle_language(message):
 def handle_myid(message):
     bot.reply_to(message, f"🆔 <b>معرفك:</b> <code>{message.from_user.id}</code>")
 
-# 🎮 نظام الألعاب - أرباح مخفضة للنصف
+# 🎮 نظام الألعاب
 @bot.callback_query_handler(func=lambda call: call.data == "games")
 def show_games(call):
     try:
@@ -389,12 +389,11 @@ def play_slot(call):
         symbols = ["🍒", "🍋", "🍊", "🍇", "🔔", "💎"]
         result = [random.choice(symbols) for _ in range(3)]
         
-        # أرباح مخفضة للنصف
         if result[0] == result[1] == result[2]:
-            win_amount = round(random.uniform(0.1, 0.3), 2)  # ⬇️ كان 0.2-0.5
+            win_amount = round(random.uniform(0.1, 0.3), 2)
             win_text = "🎉 ربح كبير!" if get_user_language(call.from_user.id) == 'ar' else "🎉 Big win!"
         elif result[0] == result[1] or result[1] == result[2]:
-            win_amount = round(random.uniform(0.05, 0.15), 2)  # ⬇️ كان 0.1-0.3
+            win_amount = round(random.uniform(0.05, 0.15), 2)
             win_text = "👍 ربح جيد!" if get_user_language(call.from_user.id) == 'ar' else "👍 Good win!"
         else:
             win_amount = 0
@@ -453,15 +452,14 @@ def play_dice(call):
         dice2 = random.randint(1, 6)
         total = dice1 + dice2
         
-        # أرباح مخفضة للنصف
         if total == 7:
-            win_amount = round(random.uniform(0.08, 0.2), 2)  # ⬇️ كان 0.15-0.4
+            win_amount = round(random.uniform(0.08, 0.2), 2)
             win_text = "🎉 ربح كبير! (رقم الحظ)" if get_user_language(call.from_user.id) == 'ar' else "🎉 Big win! (Lucky number)"
         elif total >= 10:
-            win_amount = round(random.uniform(0.04, 0.12), 2)  # ⬇️ كان 0.08-0.25
+            win_amount = round(random.uniform(0.04, 0.12), 2)
             win_text = "👍 ربح جيد!" if get_user_language(call.from_user.id) == 'ar' else "👍 Good win!"
         elif total <= 4:
-            win_amount = round(random.uniform(0.02, 0.08), 2)  # ⬇️ كان 0.05-0.15
+            win_amount = round(random.uniform(0.02, 0.08), 2)
             win_text = "👌 ربح صغير" if get_user_language(call.from_user.id) == 'ar' else "👌 Small win"
         else:
             win_amount = 0
@@ -668,7 +666,7 @@ def handle_referral(call):
 <code>{referral_link}</code>
 
 👥 <b>مزايا الإحالات:</b>
-• 🎁 1 USDT مكافأة فورية لكل إحالة
+• 🎁 0.50 USDT مكافأة فورية لكل إحالة  <!-- ⬅️ تم التعديل من 1.0 إلى 0.50 -->
 • +1 محاولة ألعاب يومية لكل إحالة  
 • فرصة ربح مضاعفة
 • وصول أسرع لشروط السحب (25 إحالة مطلوبة)
@@ -679,7 +677,7 @@ def handle_referral(call):
 <code>{referral_link}</code>
 
 👥 <b>Referral benefits:</b>
-• 🎁 1 USDT instant bonus per referral
+• 🎁 0.50 USDT instant bonus per referral  <!-- ⬅️ تم التعديل من 1.0 إلى 0.50 -->
 • +1 daily game attempt per referral  
 • Double profit opportunity
 • Faster access to withdrawal conditions (25 referrals required)
@@ -990,18 +988,64 @@ Thank you for your trust! 🌟"""
 # 🎨 نظام إرسال العروض المصممة مع أزرار - محدث
 @bot.message_handler(commands=['send_design'])
 def handle_send_design(message):
-    """أمر للإدمن لإرسال عروض مصممة"""
+    """أمر للإدمن لإرسال عروض مصممة للجميع"""
     if not is_admin(message.from_user.id):
         bot.reply_to(message, "❌ <b>ليس لديك صلاحية!</b>")
         return
     
     try:
-        bot.reply_to(message, "🖼️ <b>أرسل الصورة المصممة الآن</b>")
-        bot.register_next_step_handler(message, process_design_image)
+        # طلب تأكيد الإرسال للجميع
+        confirm_keyboard = InlineKeyboardMarkup()
+        confirm_keyboard.add(
+            InlineKeyboardButton("✅ نعم، أرسل للجميع", callback_data="design_confirm_all"),
+            InlineKeyboardButton("📱 اختبار للإدمن فقط", callback_data="design_test_only")
+        )
+        
+        total_users = users_collection.count_documents({})
+        
+        bot.reply_to(message, 
+                    f"🖼️ <b>نظام إرسال التصاميم</b>\n\n"
+                    f"👥 <b>عدد المستخدمين:</b> {total_users}\n\n"
+                    f"📝 <b>اختر طريقة الإرسال:</b>\n"
+                    f"• ✅ للجميع - يرسل لجميع المستخدمين\n"
+                    f"• 📱 اختبار - يعرض لك المعاينة فقط\n\n"
+                    f"🖼️ <b>بعد الموافقة أرسل الصورة</b>",
+                    reply_markup=confirm_keyboard)
+        
     except Exception as e:
         bot.reply_to(message, f"❌ <b>خطأ:</b> {e}")
 
-def process_design_image(message):
+@bot.callback_query_handler(func=lambda call: call.data == "design_confirm_all")
+def handle_design_confirm_all(call):
+    """تأكيد الإرسال للجميع"""
+    try:
+        bot.answer_callback_query(call.id, "📤 جاهز لاستقبال الصورة للإرسال الجماعي...")
+        bot.edit_message_text("🖼️ <b>الإرسال للجميع ✓</b>\n\nأرسل الصورة الآن...", 
+                            call.message.chat.id, 
+                            call.message.message_id)
+        
+        # تسجيل أن الإرسال للجميع
+        bot.register_next_step_handler(call.message, process_design_image, send_to_all=True)
+        
+    except Exception as e:
+        bot.reply_to(call.message, f"❌ <b>خطأ:</b> {e}")
+
+@bot.callback_query_handler(func=lambda call: call.data == "design_test_only")
+def handle_design_test_only(call):
+    """الإرسال للإدمن فقط (معاينة)"""
+    try:
+        bot.answer_callback_query(call.id, "📱 وضع المعاينة - للإدمن فقط")
+        bot.edit_message_text("🖼️ <b>وضع المعاينة ✓</b>\n\nأرسل الصورة للعرض الخاص بك...", 
+                            call.message.chat.id, 
+                            call.message.message_id)
+        
+        # تسجيل أن الإرسال للإدمن فقط
+        bot.register_next_step_handler(call.message, process_design_image, send_to_all=False)
+        
+    except Exception as e:
+        bot.reply_to(call.message, f"❌ <b>خطأ:</b> {e}")
+
+def process_design_image(message, send_to_all=False):
     """معالجة الصورة المرسلة من الإدمن"""
     try:
         if not message.photo:
@@ -1012,43 +1056,65 @@ def process_design_image(message):
         file_id = message.photo[-1].file_id
         
         bot.reply_to(message, "📝 <b>الآن أرسل النص التحتي للصورة</b>")
-        bot.register_next_step_handler(message, process_design_text, file_id)
+        bot.register_next_step_handler(message, process_design_text, file_id, send_to_all)
         
     except Exception as e:
         bot.reply_to(message, f"❌ <b>خطأ في معالجة الصورة:</b> {e}")
 
-def process_design_text(message, file_id):
-    """معالجة النص وإرسال العرض النهائي"""
+def process_design_text(message, file_id, send_to_all=False):
+    """معالجة النص وإرسال العرض"""
     try:
         caption_text = message.text or "عرض حصري! 🎯"
         
-        # ننشئ الأزرار
+        # إنشاء الأزرار
         markup = InlineKeyboardMarkup()
-        
-        # زر الإيداع - يحول مباشرة لمحادثتك
-        btn_deposit = InlineKeyboardButton(
-            "💳 إيداع الآن", 
-            url="https://t.me/Trust_wallet_Support_4"
-        )
-        
-        # زر الدعم
-        btn_support = InlineKeyboardButton(
-            "📞 دعم فني", 
-            url="https://t.me/Trust_wallet_Support_4"
-        )
-        
+        btn_deposit = InlineKeyboardButton("💳 إيداع الآن", url="https://t.me/Trust_wallet_Support_4")
+        btn_support = InlineKeyboardButton("📞 دعم فني", url="https://t.me/Trust_wallet_Support_4")
         markup.add(btn_deposit, btn_support)
         
-        # إرسال الصورة مع النص والأزرار
-        bot.send_photo(
-            message.chat.id,
-            photo=file_id,
-            caption=caption_text,
-            reply_markup=markup,
-            parse_mode="HTML"
-        )
-        
-        bot.reply_to(message, "✅ <b>تم إرسال العرض بنجاح!</b>")
+        if send_to_all:
+            # 🔥 الإرسال للجميع
+            all_users = list(users_collection.find({}, {'user_id': 1}))
+            total_users = len(all_users)
+            successful_sends = 0
+            
+            # إرسال للجميع
+            for user in all_users:
+                try:
+                    bot.send_photo(
+                        user['user_id'],
+                        photo=file_id,
+                        caption=caption_text,
+                        reply_markup=markup,
+                        parse_mode="HTML"
+                    )
+                    successful_sends += 1
+                    time.sleep(0.1)  # تجنب rate limits
+                except Exception as e:
+                    print(f"❌ فشل الإرسال للمستخدم {user['user_id']}: {e}")
+            
+            # تقرير النتيجة للإدمن
+            success_rate = (successful_sends / total_users) * 100 if total_users > 0 else 0
+            report_msg = f"""🎉 <b>تم الإرسال الجماعي بنجاح!</b>
+
+📊 <b>الإحصائيات:</b>
+👥 <b>إجمالي المستخدمين:</b> {total_users}
+✅ <b>تم الإرسال بنجاح:</b> {successful_sends}
+❌ <b>فشل في الإرسال:</b> {total_users - successful_sends}
+📈 <b>نسبة النجاح:</b> {success_rate:.1f}%"""
+
+            bot.send_message(message.chat.id, report_msg)
+            
+        else:
+            # 📱 الإرسال للإدمن فقط (معاينة)
+            bot.send_photo(
+                message.chat.id,
+                photo=file_id,
+                caption=caption_text,
+                reply_markup=markup,
+                parse_mode="HTML"
+            )
+            bot.reply_to(message, "✅ <b>تم عرض المعاينة بنجاح!</b>\n\nاستخدم /send_design للإرسال للجميع")
         
     except Exception as e:
         bot.reply_to(message, f"❌ <b>خطأ في إرسال العرض:</b> {e}")
@@ -1178,14 +1244,14 @@ def handle_addreferral(message):
         
         new_ref_count = user['referral_count'] + 1
         new_ref_new = user.get('new_referrals', 0) + 1
-        new_balance = user['balance'] + 1.0
+        new_balance = user['balance'] + 0.50  # ⬅️ تم التعديل من 1.0 إلى 0.50
         
         if update_user(target_user_id, 
                       referral_count=new_ref_count,
                       new_referrals=new_ref_new,
                       balance=new_balance,
-                      total_earnings=user['total_earnings'] + 1.0):
-            bot.reply_to(message, f"✅ <b>تم إضافة إحالة للمستخدم {target_user_id}</b>\n👥 <b>الإحالات الجديدة:</b> {new_ref_new}\n💰 <b>المكافأة:</b> 1.0 USDT")
+                      total_earnings=user['total_earnings'] + 0.50):  # ⬅️ تم التعديل من 1.0 إلى 0.50
+            bot.reply_to(message, f"✅ <b>تم إضافة إحالة للمستخدم {target_user_id}</b>\n👥 <b>الإحالات الجديدة:</b> {new_ref_new}\n💰 <b>المكافأة:</b> 0.50 USDT")  # ⬅️ تم التعديل من 1.0 إلى 0.50
         else:
             bot.reply_to(message, "❌ <b>فشل في إضافة الإحالة!</b>")
     except Exception as e:
@@ -1558,7 +1624,7 @@ def handle_broadcast_cancel(call):
                          call.message.message_id)
 
 # =============================================
-# 🔧 نظام السيرفر والويب هوك - إصدار معدل
+# 🔧 نظام السيرفر والويب هوك
 # =============================================
 
 app = Flask(__name__)
@@ -1567,10 +1633,9 @@ app = Flask(__name__)
 def webhook():
     """استقبال الرسائل من تليجرام"""
     try:
-        if request.method == 'POST':
-            json_data = request.get_json()
-            update = telebot.types.Update.de_json(json_data)
-            bot.process_new_updates([update])
+        json_data = request.get_json()
+        update = telebot.types.Update.de_json(json_data)
+        bot.process_new_updates([update])
         return 'OK'
     except Exception as e:
         print(f"❌ Webhook error: {e}")
@@ -1578,71 +1643,87 @@ def webhook():
 
 @app.route('/')
 def home():
-    return "🤖 البوت شغال - " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return "🤖 البوت شغال - " + time.strftime("%Y-%m-%d %H:%M:%S")
+
+@app.route('/health')
+def health():
+    return "✅ البوت بصحة جيدة"
+
+@app.route('/ping')
+def ping():
+    return "🏓 Pong - " + time.strftime("%H:%M:%S")
 
 @app.route('/set_webhook', methods=['GET'])
 def set_webhook_manual():
     """تعيين الويب هوك يدوياً"""
     try:
-        # إزالة أي ويب هوك سابق
-        bot.remove_webhook()
-        time.sleep(3)
-        
-        # تعيين الويب هوك الجديد
-        webhook_url = "https://usdt-telegram-bot-1-z7op.onrender.com/webhook"
-        result = bot.set_webhook(
-            url=webhook_url,
-            max_connections=100
-        )
-        
-        # اختبار الويب هوك
-        webhook_info = bot.get_webhook_info()
-        
-        return f"""
-        ✅ <b>تم تعيين الويب هوك بنجاح!</b><br>
-        📍 <b>الرابط:</b> {webhook_url}<br>
-        📊 <b>الحالة:</b> {result}<br>
-        ℹ️ <b>معلومات الويب هوك:</b> {webhook_info}
-        """
-    except Exception as e:
-        return f"❌ <b>خطأ في تعيين الويب هوك:</b> {str(e)}"
-
-@app.route('/webhook_info', methods=['GET'])
-def webhook_info():
-    """معلومات الويب هوك الحالي"""
-    try:
-        info = bot.get_webhook_info()
-        return f"📊 <b>معلومات الويب هوك:</b><br>{info}"
-    except Exception as e:
-        return f"❌ <b>خطأ:</b> {str(e)}"
-
-# 🔄 إعداد الويب هوك تلقائياً عند التشغيل
-def setup_webhook():
-    """إعداد الويب هوك تلقائياً"""
-    time.sleep(10)  # انتظر حتى يبدأ السيرفر
-    try:
-        print("🔄 جاري تعيين الويب هوك تلقائياً...")
         bot.remove_webhook()
         time.sleep(2)
         webhook_url = "https://usdt-telegram-bot-1-z7op.onrender.com/webhook"
         result = bot.set_webhook(url=webhook_url)
-        print(f"✅ تم تعيين الويب هوك: {webhook_url}")
-        print(f"📊 النتيجة: {result}")
+        return f"✅ تم تعيين الويب هوك!<br>الرابط: {webhook_url}<br>النتيجة: {result}"
     except Exception as e:
-        print(f"❌ فشل تعيين الويب هوك: {e}")
+        return f"❌ خطأ: {str(e)}"
+
+@app.route('/test')
+def test():
+    return "✅ البوت شغال تمام! - " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# 🔄 نظام الإبقاء على الخدمة نشطة - محسّن
+def keep_alive():
+    while True:
+        try:
+            response = requests.get('https://usdt-telegram-bot-1-z7op.onrender.com/ping', timeout=10)
+            if response.status_code == 200:
+                print(f"✅ Keep-alive - {time.strftime('%H:%M:%S')}")
+            else:
+                print(f"⚠️ Keep-alive status: {response.status_code}")
+        except Exception as e:
+            print(f"❌ Keep-alive failed: {e}")
+        time.sleep(300)  # ⬅️ كل 5 دقائق فقط
+
+# 🔄 إعداد الويب هوك تلقائياً - محسّن
+def setup_webhook():
+    """إعداد الويب هوك تلقائياً مع إعادة المحاولة"""
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            time.sleep(15)  # انتظر 15 ثانية للتأكد من تشغيل السيرفر
+            print(f"🔄 جاري تعيين الويب هوك (المحاولة {attempt + 1})...")
+            
+            bot.remove_webhook()
+            time.sleep(2)
+            
+            webhook_url = "https://usdt-telegram-bot-1-z7op.onrender.com/webhook"
+            result = bot.set_webhook(url=webhook_url)
+            
+            # تحقق من الويب هوك
+            webhook_info = bot.get_webhook_info()
+            print(f"✅ تم تعيين الويب هوك: {webhook_url}")
+            print(f"📊 معلومات الويب هوك: {webhook_info}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ فشل تعيين الويب هوك (المحاولة {attempt + 1}): {e}")
+            if attempt < max_retries - 1:
+                time.sleep(10)  # انتظر قبل إعادة المحاولة
+    return False
 
 if __name__ == '__main__':
     print("🚀 بدء تشغيل البوت...")
-    
-    # تشغيل إعداد الويب هوك في خيط منفصل
-    webhook_thread = threading.Thread(target=setup_webhook, daemon=True)
-    webhook_thread.start()
     
     # تشغيل نظام الإبقاء النشط
     keep_thread = threading.Thread(target=keep_alive, daemon=True)
     keep_thread.start()
     
-    # تشغيل الخادم
-    port = int(os.environ.get("PORT", 8080))
-    print(f"🌐 الخادم شغال على البورت: {port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # محاولة إعداد الويب هوك تلقائياً
+    webhook_success = setup_webhook()
+    if not webhook_success:
+        print("⚠️ تشغيل بدون ويب هوك - استخدام polling")
+        bot.remove_webhook()
+        time.sleep(2)
+        bot.polling(none_stop=True)
+    else:
+        # تشغيل الخادم
+        port = int(os.environ.get("PORT", 8080))
+        app.run(host='0.0.0.0', port=port, debug=False)
