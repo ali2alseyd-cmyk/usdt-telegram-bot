@@ -652,12 +652,40 @@ Thank you for your trust! 🌟"""
     except Exception as e:
         print(f"❌ VIP purchase error: {e}")
 
-# 👥 نظام الإحالات - تم التعديل لاستخدام الرابط الثابت
+
+
+# 💰 نظام السحب
+@bot.callback_query_handler(func=lambda call: call.data == "withdraw")
+def handle_withdraw(call):
+    try:
+        user = get_user(call.from_user.id)
+        days_registered, days_remaining = get_membership_days(call.from_user.id)
+        lang = get_user_language(call.from_user.id)
+        
+        if not user.get('has_deposit', 0):
+            withdraw_text = f"""❌ <b>غير مؤهل للسحب</b>
+
+📅 <b>مدة العضوية:</b> {days_registered}/10 أيام
+
+<b>💰 الشروط المطلوبة للسحب:</b>
+1. ✅ إيداع أولي (10 USDT)
+2. ✅ رصيد 150 USDT  
+3. ✅ 25 إحالة جديدة
+4. ✅ 10 أيام عضوية
+
+<b>💳 لبدء الإيداع، اضغط زر الإيداع في القائمة الرئيسية</b>""" if lang == 'ar' else f"""❌ <b>Not eligible for withdrawal</b>
+
+📅 <b>Membership:</b> {days_registered}/10 days
+
+<b>💰 Required conditions:</b>
+1. ✅ Initi# 👥 نظام الإحالات - الكود المصحح
 @bot.callback_query_handler(func=lambda call: call.data == "referral")
 def handle_referral(call):
     try:
+        print(f"🔔 زر الإحالات مضغوط من user_id: {call.from_user.id}")
+        
         user_id = call.from_user.id
-        referral_link = f"https://t.me/Usdt_Mini1Bot?start=ref{user_id}"  # ⬅️ الرابط الثابت مع إضافة الريف
+        referral_link = f"https://t.me/Usdt_Mini1Bot?start=ref{user_id}"
         
         lang = get_user_language(user_id)
         
@@ -686,40 +714,31 @@ def handle_referral(call):
 <b>📤 Share the link with your friends and earn more!</b>"""
         
         keyboard = InlineKeyboardMarkup()
-        share_text = "انضم إلي في هذا البوت الرائع واربح USDT مجاناً! 🚀" if lang == 'ar' else "Join me in this awesome bot and earn USDT for free! 🚀"
-        keyboard.add(InlineKeyboardButton("📤 مشاركة الرابط" if lang == 'ar' else "📤 Share Link", 
-                                         url=f"https://t.me/share/url?url={referral_link}&text={share_text}"))
-        keyboard.add(InlineKeyboardButton("🔙 رجوع" if lang == 'ar' else "🔙 Back", callback_data="back_to_profile"))
         
-        bot.edit_message_text(referral_text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
+        # زر المشاركة - إصلاح الرابط
+        share_url = f"https://t.me/share/url?url={referral_link}"
+        if lang == 'ar':
+            keyboard.add(InlineKeyboardButton("📤 مشاركة الرابط", url=share_url))
+            keyboard.add(InlineKeyboardButton("🔙 رجوع", callback_data="back_to_profile"))
+        else:
+            keyboard.add(InlineKeyboardButton("📤 Share Link", url=share_url))
+            keyboard.add(InlineKeyboardButton("🔙 Back", callback_data="back_to_profile"))
+        
+        # إرسال الرسالة المعدلة
+        bot.edit_message_text(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            text=referral_text,
+            reply_markup=keyboard,
+            parse_mode="HTML"
+        )
+        
+        # تأكيد النقر
+        bot.answer_callback_query(call.id, "✅ تم فتح نظام الإحالات")
+        
     except Exception as e:
-        print(f"❌ Referral error: {e}")
-
-# 💰 نظام السحب
-@bot.callback_query_handler(func=lambda call: call.data == "withdraw")
-def handle_withdraw(call):
-    try:
-        user = get_user(call.from_user.id)
-        days_registered, days_remaining = get_membership_days(call.from_user.id)
-        lang = get_user_language(call.from_user.id)
-        
-        if not user.get('has_deposit', 0):
-            withdraw_text = f"""❌ <b>غير مؤهل للسحب</b>
-
-📅 <b>مدة العضوية:</b> {days_registered}/10 أيام
-
-<b>💰 الشروط المطلوبة للسحب:</b>
-1. ✅ إيداع أولي (10 USDT)
-2. ✅ رصيد 150 USDT  
-3. ✅ 25 إحالة جديدة
-4. ✅ 10 أيام عضوية
-
-<b>💳 لبدء الإيداع، اضغط زر الإيداع في القائمة الرئيسية</b>""" if lang == 'ar' else f"""❌ <b>Not eligible for withdrawal</b>
-
-📅 <b>Membership:</b> {days_registered}/10 days
-
-<b>💰 Required conditions:</b>
-1. ✅ Initial deposit (10 USDT)
+        print(f"❌ خطأ في زر الإحالات: {e}")
+        bot.answer_callback_query(call.id, "❌ حدث خطأ، حاول مرة أخرى")al deposit (10 USDT)
 2. ✅ 150 USDT balance  
 3. ✅ 25 new referrals
 4. ✅ 10 days membership
