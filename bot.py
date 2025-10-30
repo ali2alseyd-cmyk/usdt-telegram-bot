@@ -652,13 +652,14 @@ Thank you for your trust! 🌟"""
     except Exception as e:
         print(f"❌ VIP purchase error: {e}")
 
-# 👥 نظام الإحالات
+# 👥 نظام الإحالات - تم التعديل لاستخدام الرابط الثابت
 @bot.callback_query_handler(func=lambda call: call.data == "referral")
 def handle_referral(call):
     try:
-        bot_username = bot.get_me().username
-        referral_link = f"https://t.me/{bot_username}?start=ref{call.from_user.id}"
-        lang = get_user_language(call.from_user.id)
+        user_id = call.from_user.id
+        referral_link = f"https://t.me/Usdt_Mini1Bot?start=ref{user_id}"  # ⬅️ الرابط الثابت مع إضافة الريف
+        
+        lang = get_user_language(user_id)
         
         referral_text = f"""🎯 <b>نظام الإحالات</b>
 
@@ -666,7 +667,7 @@ def handle_referral(call):
 <code>{referral_link}</code>
 
 👥 <b>مزايا الإحالات:</b>
-• 🎁 0.50 USDT مكافأة فورية لكل إحالة  <!-- ⬅️ تم التعديل من 1.0 إلى 0.50 -->
+• 🎁 0.50 USDT مكافأة فورية لكل إحالة
 • +1 محاولة ألعاب يومية لكل إحالة  
 • فرصة ربح مضاعفة
 • وصول أسرع لشروط السحب (25 إحالة مطلوبة)
@@ -677,7 +678,7 @@ def handle_referral(call):
 <code>{referral_link}</code>
 
 👥 <b>Referral benefits:</b>
-• 🎁 0.50 USDT instant bonus per referral  <!-- ⬅️ تم التعديل من 1.0 إلى 0.50 -->
+• 🎁 0.50 USDT instant bonus per referral
 • +1 daily game attempt per referral  
 • Double profit opportunity
 • Faster access to withdrawal conditions (25 referrals required)
@@ -685,7 +686,9 @@ def handle_referral(call):
 <b>📤 Share the link with your friends and earn more!</b>"""
         
         keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton("📤 مشاركة الرابط" if lang == 'ar' else "📤 Share Link", url=f"https://t.me/share/url?url={referral_link}&text={'انضم%20إلي%20في%20هذا%20البوت%20الرائع%20واربح%20USDT%20مجاناً!' if lang == 'ar' else 'Join%20me%20in%20this%20awesome%20bot%20and%20earn%20USDT%20for%20free!'}"))
+        share_text = "انضم إلي في هذا البوت الرائع واربح USDT مجاناً! 🚀" if lang == 'ar' else "Join me in this awesome bot and earn USDT for free! 🚀"
+        keyboard.add(InlineKeyboardButton("📤 مشاركة الرابط" if lang == 'ar' else "📤 Share Link", 
+                                         url=f"https://t.me/share/url?url={referral_link}&text={share_text}"))
         keyboard.add(InlineKeyboardButton("🔙 رجوع" if lang == 'ar' else "🔙 Back", callback_data="back_to_profile"))
         
         bot.edit_message_text(referral_text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
